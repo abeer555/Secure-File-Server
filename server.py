@@ -8,8 +8,8 @@ import re
 import mimetypes
 
 PORT = 8000
-USERNAME = "a"
-PASSWORD = "a"
+USERNAME = "username"
+PASSWORD = "password"
 SITE_NAME = "CryptoSage's Room"
 
 class CustomTCPServer(socketserver.TCPServer):
