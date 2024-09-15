@@ -5,10 +5,11 @@ import io
 import base64
 import urllib
 import re
+import mimetypes
 
 PORT = 8000
-USERNAME = "your_username"
-PASSWORD = "your_password"
+USERNAME = "a"
+PASSWORD = "a"
 SITE_NAME = "CryptoSage's Room"
 
 class CustomTCPServer(socketserver.TCPServer):
@@ -27,7 +28,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             return
 
-        return http.server.SimpleHTTPRequestHandler.do_GET(self)
+        path = self.translate_path(self.path)
+        if os.path.isfile(path):
+            self.send_file(path)
+        else:
+            return http.server.SimpleHTTPRequestHandler.do_GET(self)
 
     def do_POST(self):
         if not self.authenticate():
@@ -64,6 +69,27 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             username, password = auth_decoded.split(':')
             return username == USERNAME and password == PASSWORD
 
+    def send_file(self, path):
+        try:
+            f = open(path, 'rb')
+        except OSError:
+            self.send_error(404, "File not found")
+            return None
+
+        try:
+            fs = os.fstat(f.fileno())
+            content_type, encoding = mimetypes.guess_type(path)
+            if content_type is None:
+                content_type = 'application/octet-stream'
+            self.send_response(200)
+            self.send_header("Content-type", content_type)
+            self.send_header("Content-Length", str(fs[6]))
+            self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+            self.end_headers()
+            self.copyfile(f, self.wfile)
+        finally:
+            f.close()
+
     def list_directory(self, path):
         try:
             list = os.listdir(path)
@@ -74,7 +100,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         def natural_sort_key(s):
             return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', s)]
         
-        # Get sorting parameters from query
         query = urllib.parse.urlparse(self.path).query
         params = urllib.parse.parse_qs(query)
         sort_by = params.get('sort', ['name'])[0]
@@ -89,7 +114,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         elif sort_by == 'date':
             list.sort(key=lambda x: os.path.getmtime(os.path.join(path, x)), reverse=reverse)
 
-        # Toggle sort order for next click
         next_order = 'desc' if sort_order == 'asc' else 'asc'
 
         r = []
@@ -102,18 +126,25 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         r.append(f'<title>{SITE_NAME} - {displaypath}</title>')        
         r.append('<style>')
         r.append('body { font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; background-color: #36393f; color: #dcddde; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }')
-        r.append('header, footer { background-color: #2f3136; padding: 10px 20px; text-align: center; }')
+        r.append('header, footer { background-color: #2f3136; padding: 15px 20px; text-align: center; }')
         r.append('header h1, footer p { margin: 0; color: #7289da; }')
-        r.append('.container { flex: 1; width: 80%; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); background-color: #2f3136; }')
-        r.append('table { width: 100%; border-collapse: collapse; margin-top: 20px; }')
-        r.append('th, td { padding: 12px 15px; border: 1px solid #2f3136; }')
-        r.append('th { background-color: #7289da; color: #ffffff; }')
-        r.append('a { text-decoration: none; color: inherit; transition: color 0.3s ease, transform 0.3s ease; }')
-        r.append('a:hover { text-decoration: underline; color: inherit; transform: translateY(-2px); }')
-        r.append('.download-btn { background-color: #7289da; color: white; padding: 8px 16px; border-radius: 5px; transition: background-color 0.3s ease, transform 0.3s ease; display: inline-block; text-align: center; margin: 10px auto; font-size: 14px; width: auto; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }')
-        r.append('.download-btn:hover { background-color: #677bc4; transform: translateY(-3px); box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); }')
-        r.append('.sort-link { color: #ffffff; text-decoration: none; margin-right: 15px; transition: color 0.3s ease, transform 0.3s ease; font-weight: bold; }')
-        r.append('.sort-link:hover { text-decoration: underline; transform: translateY(-3px); color: #ffffff; }')
+        r.append('.container { flex: 1; width: 95%; max-width: 1200px; margin: 20px auto; padding: 20px; border: 1px solid #4f545c; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); background-color: #2f3136; }')
+        r.append('table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 20px; border: 1px solid #4f545c; border-radius: 10px; overflow: hidden; }')
+        r.append('th, td { padding: 12px 15px; border-bottom: 1px solid #4f545c; }')
+        r.append('tr:last-child td { border-bottom: none; }')
+        r.append('th { background-color: #7289da; color: #ffffff; text-align: left; }')
+        r.append('td:nth-child(3), td:nth-child(4), th:nth-child(3), th:nth-child(4) { text-align: center; }')
+        r.append('a { text-decoration: none; color: #dcddde; transition: color 0.3s ease, transform 0.3s ease; }')
+        r.append('a:hover { color: #ffffff; transform: translateY(-2px); }')
+        r.append('.download-btn { background-color: #7289da; color: white; padding: 8px 16px; border-radius: 5px; transition: all 0.3s ease; display: inline-block; text-align: center; margin: 5px auto; font-size: 14px; width: auto; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }')
+        r.append('.download-btn:hover { background-color: #677bc4; transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); }')
+        r.append('.sort-link { color: #ffffff; text-decoration: none; margin-right: 15px; transition: all 0.3s ease; font-weight: bold; }')
+        r.append('.sort-link:hover { text-decoration: underline; transform: translateY(-3px); }')
+        r.append('@media (max-width: 768px) { .container { width: 100%; padding: 10px; } table { font-size: 14px; } th, td { padding: 8px; } .download-btn { padding: 6px 12px; font-size: 12px; } .sort-link { margin-right: 10px; } td:nth-child(2), th:nth-child(2) { display: none; } }')
+        r.append('@media (max-width: 480px) { table { font-size: 12px; } th, td { padding: 6px; } .download-btn { padding: 4px 8px; font-size: 10px; } .sort-link { margin-right: 5px; } }')
+        r.append('@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }')
+        r.append('.animate-pulse { animation: pulse 2s infinite; }')
+        r.append('tr:hover { background-color: #40444b; }')
         r.append('</style>')
         r.append('</head>')
         r.append('<body>')
@@ -122,6 +153,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         r.append('</header>')
         r.append('<div class="container">')
         r.append(f'<h2>{displaypath}</h2>')
+        r.append('<div style="overflow-x: auto;">')
         r.append('<table>')
         r.append(f'<tr><th><a href="?sort=name&order={next_order if sort_by == "name" else "asc"}" class="sort-link">Name</a></th><th><a href="?sort=size&order={next_order if sort_by == "size" else "asc"}" class="sort-link">Size</a></th><th><a href="?sort=date&order={next_order if sort_by == "date" else "asc"}" class="sort-link">Last Modified</a></th><th>Action</th></tr>')
         for name in list:
@@ -133,18 +165,19 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             if os.path.islink(fullname):
                 displayname = name + "@"
             r.append('<tr>')
-            r.append(f'<td><a href="{urllib.parse.quote(linkname)}">{displayname}</a></td>')
+            r.append(f'<td><a href="{urllib.parse.quote(linkname)}" class="animate-pulse">{displayname}</a></td>')
             if os.path.isdir(fullname):
                 r.append('<td>-</td>')
             else:
-                r.append(f'<td>{self.human_readable_size(os.path.getsize(fullname))}</td>')
+                r.append(f'<td>{self.human(os.path.getsize(fullname))}</td>')
             r.append(f'<td>{self.date_time_string(os.path.getmtime(fullname))}</td>')
             r.append('<td>')
             if not os.path.isdir(fullname):
-                r.append(f'<a href="{urllib.parse.quote(linkname)}" class="download-btn" download>Download</a>')
+                r.append(f'<a href="{urllib.parse.quote(linkname)}" class="download-btn">View/Download</a>')
             r.append('</td>')
             r.append('</tr>')
         r.append('</table>')
+        r.append('</div>')
         r.append('</div>')
         r.append('<footer>')
         r.append('<p>&copy; 2024 CryptoSage | <a href="https://github.com/abeer555" target="_blank" style="color: #7289da;">GitHub</a></p>')
@@ -161,7 +194,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         return f
 
-    def human_readable_size(self, size):
+    def human(self, size):
         for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
             if size < 1024.0:
                 return f"{size:.1f} {unit}"
