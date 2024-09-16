@@ -13,7 +13,8 @@ USERNAME = ""
 PASSWORD = ""
 
 SITE_NAME = "Welcome to Cyber-0-Day 3.0"
-CHUNK_SIZE = 8192
+CHUNK_SIZE = 1048576  # 1 MB
+
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
