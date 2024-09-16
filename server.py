@@ -6,14 +6,17 @@ import base64
 import urllib
 import re
 import mimetypes
+import threading
 
 PORT = 8000
-USERNAME = "username"
-PASSWORD = "password"
-SITE_NAME = "CryptoSage's Room"
+USERNAME = ""
+PASSWORD = ""
 
-class CustomTCPServer(socketserver.TCPServer):
-    allow_reuse_address = True
+SITE_NAME = "Welcome to Cyber-0-Day 3.0"
+CHUNK_SIZE = 8192
+
+class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    daemon_threads = True
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -57,7 +60,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         else:
             self.send_error(400, "Invalid POST request")
 
-    def authenticate(self):
+    def authenticate(self): 
         if self.headers.get('Authorization') is None:
             return False
         else:
@@ -89,6 +92,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.copyfile(f, self.wfile)
         finally:
             f.close()
+
 
     def list_directory(self, path):
         try:
@@ -203,6 +207,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
 Handler = CustomHandler
 
-with CustomTCPServer(("", PORT), Handler) as httpd:
+with ThreadedHTTPServer(("", PORT), Handler) as httpd:
     print(f"Serving at port {PORT}")
     httpd.serve_forever()
