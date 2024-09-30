@@ -1,4 +1,5 @@
 # Secure File Server
+![swappy-20240930-074223](https://github.com/user-attachments/assets/4af656c9-6661-4557-85ca-b8fc58098df3)
 
 Secure file server is a robust, Python-based HTTP file server with advanced authentication mechanisms, providing a secure and intuitive web interface for organizational file management.
 
