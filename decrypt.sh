@@ -38,7 +38,6 @@ fi
 echo "Extracting encrypted data..."
 tail -c +17 "$INPUT_FILE" >encrypted_data.dat
 if [ ! -s "encrypted_data.dat" ]; then
-  echo "Error: Failed to extract encrypted data. Ensure the input file is a valid encrypted file."
   rm -f "iv.bin" "encrypted_data.dat" # Clean up temp files
   exit 1
 fi
@@ -52,10 +51,10 @@ openssl enc -aes-256-cbc -d \
   -iv $(xxd -p -c 16 iv.bin)
 
 if [ $? -ne 0 ]; then
-  echo "Error: OpenSSL decryption failed. Please check:"
-  echo "  - Is OpenSSL installed and in your PATH?"
-  echo "  - Is the encryption key '$KEY_FILE' correct?"
-  echo "  - Is the input file '$INPUT_FILE' actually encrypted by the server?"
+#  echo "Error: OpenSSL decryption failed. Please check:"
+#  echo "  - Is OpenSSL installed and in your PATH?"
+#  echo "  - Is the encryption key '$KEY_FILE' correct?"
+#  echo "  - Is the input file '$INPUT_FILE' actually encrypted by the server?"
   rm -f "iv.bin" "encrypted_data.dat" # Clean up temp files
   exit 1
 else

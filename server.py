@@ -13,9 +13,9 @@ import secrets
 import subprocess
 import tempfile
 
-PORT = 8000
-USERNAME = ""
-PASSWORD = ""
+PORT =8001 
+USERNAME = "a"
+PASSWORD = "a"
 
 SITE_NAME = "Welcome to CN project"
 CHUNK_SIZE = 1048576  # 1 MB
@@ -347,7 +347,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         r.append('</header>')
         r.append('<div class="container">')
         r.append('<div class="encryption-banner">')
-        r.append('<h3>🔐 Discord-themed Secure File Server</h3>')
         r.append('<div class="encryption-badge">OpenSSL AES-256 Encryption Active</div>')
         r.append('<p class="encryption-details">Files are automatically encrypted for secure storage and transfer</p>')
         r.append('</div>')
@@ -393,7 +392,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 elif fullname.endswith(('.jpg', '.jpeg', '.png', '.gif', '.ico', '.webp')):
                     r.append('<td><div class="tooltip"><span class="status-icon">🖼️ Image</span><span class="tooltiptext">Image files are not encrypted for display purposes</span></div></td>')
                 else:
-                    r.append('<td><span class="status-icon">⏳ Pending</span></td>')
+                    r.append('<td><span class="status-icon">🔒  Encrypted</span></td>')
 
             r.append('<td>')
             if not os.path.isdir(fullname):
