@@ -1,16 +1,16 @@
 # Secure File Server
-## Todo
-ADD IDS - Intrusion Detection System
 
-A lightweight HTTP file server with OpenSSL AES-256-CBC encryption for secure file storage and transfer. Files are automatically encrypted on the server and can be decrypted using the provided tools.
+A lightweight HTTP file server with OpenSSL AES-256-CBC encryption for secure file storage and transfer, plus an integrated Intrusion Detection System (IDS) for security monitoring. Files are automatically encrypted on the server and can be decrypted using the provided tools.
 
 ![Encryption](https://img.shields.io/badge/Encryption-AES--256--CBC-green)
+![Security](https://img.shields.io/badge/Security-IDS%20Monitoring-red)
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS-blue)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
 ## Features
 
 - 🔒 **Automatic file encryption** using OpenSSL AES-256-CBC
+- 🛡️ **Intrusion Detection System (IDS)** to monitor and block suspicious activities
 - 🔑 **Basic authentication** to restrict server access
 - 📂 **Intuitive web interface** for browsing files
 - 🖼️ **Image preview support** (images remain unencrypted for display)
@@ -66,6 +66,22 @@ A lightweight HTTP file server with OpenSSL AES-256-CBC encryption for secure fi
 - Download files by clicking on file names
 - Files (except images) are automatically encrypted when served
 
+### Intrusion Detection System (IDS)
+
+The server includes a built-in IDS that monitors for suspicious activities:
+
+- **Security Monitoring**: Tracks login attempts, request rates, and suspicious patterns
+- **Automatic Blocking**: Blocks IPs after multiple high-severity security events
+- **Security Dashboard**: Access at `/ids_dashboard` using your server credentials
+- **Real-time Alerts**: Visual indicators when suspicious activities are detected
+- **Comprehensive Logging**: All security events are logged with timestamps and details
+
+The IDS is configured to detect:
+- Brute force login attempts
+- Abnormal request rates (potential DoS)
+- Common attack patterns (SQL injection, XSS, path traversal)
+- Known malicious user agents
+
 ### Decrypting Files
 
 Use the included `decrypt.sh` script to decrypt downloaded files:
@@ -83,6 +99,7 @@ By default, the decrypted file will be saved as `decrypted_file.dat`. The script
 - Change the default username and password before deploying in a production environment.
 - This server uses HTTP (not HTTPS), so consider running it behind a reverse proxy with TLS for production use.
 - The server is designed for use within trusted networks (LAN/private networks).
+- The IDS configuration can be adjusted in the `IDS_CONFIG` section of the code to match your security requirements.
 
 ## Server Architecture
 
@@ -90,6 +107,7 @@ By default, the decrypted file will be saved as `decrypted_file.dat`. The script
 - **Metadata Management**: Tracks encrypted files and their original sizes
 - **Threading**: Handles multiple connections simultaneously
 - **File Management**: Preserves original file structure while storing encrypted versions
+- **Intrusion Detection**: Real-time monitoring of requests and user activities
 
 ## Troubleshooting
 
@@ -97,6 +115,11 @@ If you encounter issues decrypting files, check that:
 - The encryption key file (`encryption_key.bin`) is in the correct location
 - OpenSSL is properly installed on your system
 - The file was actually encrypted by this server
+
+If you see a high number of security alerts in the IDS dashboard:
+- Check for misconfigured clients making repeated requests
+- Look for patterns in the blocked requests
+- Adjust the IDS thresholds if needed for your environment
 
 ## License
 
